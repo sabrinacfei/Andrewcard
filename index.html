@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日一抽</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      color: #333;
+      overflow: hidden;
+    }
+
+    .intro-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      margin-bottom: 30px;
+      animation: fadeIn 2s ease forwards;
+      opacity: 0;
+    }
+
+    .intro-text p {
+      font-size: 1.2rem;
+      margin: 10px 0;
+      line-height: 1.8;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #draw-card {
+      padding: 15px 40px;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #6dd5fa, #2980b9);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      margin-bottom: 20px;
+    }
+
+    #draw-card:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .question-card {
+      display: none;
+      padding: 20px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .answer-option {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .answer-option:hover {
+      background-color: #ddd;
+    }
+
+    .reward-card, .wrong-answer {
+      display: none;
+      padding: 15px;
+      background: linear-gradient(135deg, #ff6f61, #ffa62b, #ffd54f, #8fd3f4);
+      background-size: 300% 300%;
+      animation: gradientMove 3s infinite ease-in-out, fadeIn 1.5s ease forwards;
+      border-radius: 15px;
+      font-size: 1rem;
+      color: white;
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .wrong-answer {
+      background: red;
+    }
+
+    .confetti {
+      position: absolute;
+      top: -10vh;
+      width: 10px;
+      height: 20px;
+      background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+      border-radius: 3px;
+      animation: fall 3s ease-in-out forwards, spin 3s linear infinite;
+      z-index: 10;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) translateX(calc(-50px + 100px * var(--random-x))) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="intro-text">
+    <h1>謝小彤的每日一抽小教室</h1>
+    <p>每天被提問，看看你多了解我！答對有獎勳🥳，拍照存證才有效喔📸</p>
+    <p>⚠️ 答錯會有懲罰喔！⚠️</p>
+  </div>
+  <button id="draw-card">抽卡</button>
+  <div id="question-card" class="question-card">
+    <h2 id="question-text"></h2>
+    <div id="answer-options"></div>
+  </div>
+
+  <div id="reward-card" class="reward-card"></div>
+  <div id="wrong-answer" class="wrong-answer">答錯了！幫謝小彤按摩10分鐘</div>
+
+  <script>
+    const dailyQuestions = [
+      { question: "謝小彤覺得自己胖了，你應該要...？", answers: ["嘲笑她：你以前也沒瘦過啊", "邀她一起健身", "誇獎她很瘦並且抱起來轉一圈"], correctAnswer: "誇獎她很瘦並且抱起來轉一圈", reward: "遊戲陪玩券" },
+      { question: "冬天到了，謝小彤穿少了覺得好冷，你應該要...?", answers: ["把他手放到自己屁股底下取暖", "抱她並且把她藏到自己外套裡給她取暖", "說：哈哈哈幸好我穿的多"], correctAnswer: "抱她並且把她藏到自己外套裡給她取暖", reward: "遊戲券" },
+      { question: "謝小彤半夜突然餓了，你應該要...", answers: ["笑她這麼晚還吃", "勸她注意身材", "哄她睡覺"], correctAnswer: "哄她睡覺", reward: "吃你想吃的券" },
+      { question: "下列哪種行為是謝小彤已經生氣了", answers: ["突然不說話", "皺眉頭", "大喊：你偷看別的女生～"], correctAnswer: "突然不說話", reward: "誇誇券" },
+      { question: "謝小彤的生日是幾月幾日？", answers: ["12月25日", "9月29日", "10月10日"], correctAnswer: "9月29日", reward: "認錯券" },
+      { question: "謝小彤最喜歡的顏色是什麼？", answers: ["紅色", "藍色", "粉色"], correctAnswer: "粉色", reward: "一天無限抱抱券" },
+      { question: "謝小彤的最愛食物是什麼？", answers: ["鮭魚壽司", "披薩", "麥當勞薯條"], correctAnswer: "鮭魚壽司", reward: "一天無限貼貼券" },
+      { question: "謝小彤最喜歡的電影是什麼？", answers: ["富都青年", "獅子王", "咒"], correctAnswer: "富都青年", reward: "一秒消氣券" },
+      { question: "謝小彤的寵物是什麼？", answers: ["貓", "狗", "兔子"], correctAnswer: "狗", reward: "我口渴啦券" },
+      { question: "謝小彤想要的旅遊地點是什麼？", answers: ["巴黎", "東京", "紐約"], correctAnswer: "巴黎", reward: "和好券" },
+      { question: "謝小彤的身高？", answers: ["188", "158", "157.8"], correctAnswer: "158", reward: "聽話卡" },
+      { question: "謝小彤有多愛林小強", answers: ["宇宙無敵愛", "愛的比林小強多", "超級無敵世界霹靂宇宙愛"], correctAnswer: "愛的比林小強多", reward: "我想吃零食啦卡" },
+      { question: "謝小彤隱眼度數多少？", answers: ["700", "800", "650"], correctAnswer: "700", reward: "誇誇券" },
+      { question: "謝小彤最討厭林小強做什麼事？", answers: ["打遊戲不理她", "毀了她的分享慾", "出門一直睡覺"], correctAnswer: "毀了她的分享慾", reward: "一秒消氣券" },
+      { question: "謝小彤腳腳多大", answers: ["跟地球一樣", "38.5", "38"], correctAnswer: "38.5", reward: "誇誇券" }
+    ];
+
+    const drawCardButton = document.getElementById("draw-card");
+    const questionCard = document.getElementById("question-card");
+    const rewardCard = document.getElementById("reward-card");
+    const wrongAnswer = document.getElementById("wrong-answer");
+    const questionText = document.getElementById("question-text");
+    const answerOptions = document.getElementById("answer-options");
+
+    // 檢查是否已經回答過
+    if(localStorage.getItem('hasAnswered') === 'true') {
+      drawCardButton.disabled = true;  // 禁用抽卡按鈕
+      drawCardButton.textContent = '今天已經答過問題了';
+    }
+
+    drawCardButton.addEventListener("click", () => {
+      const randomIndex = Math.floor(Math.random() * dailyQuestions.length);
+      const selectedQuestion = dailyQuestions[randomIndex];
+      questionCard.style.display = "block";
+      rewardCard.style.display = "none";
+      wrongAnswer.style.display = "none";
+      questionText.textContent = selectedQuestion.question;
+      answerOptions.innerHTML = "";
+      selectedQuestion.answers.forEach(answer => {
+        const answerDiv = document.createElement("div");
+        answerDiv.classList.add("answer-option");
+        answerDiv.textContent = answer;
+        answerDiv.addEventListener("click", () => {
+          checkAnswer(answer, selectedQuestion.correctAnswer, selectedQuestion.reward);
+        });
+        answerOptions.appendChild(answerDiv);
+      });
+    });
+
+    function checkAnswer(answer, correctAnswer, reward) {
+      if (answer === correctAnswer) {
+        rewardCard.innerHTML = `<h2>答對了！恭喜獲得：${reward}一張</h2>`;
+        rewardCard.style.display = "block";
+        showConfetti();
+      } else {
+        wrongAnswer.style.display = "block";
+      }
+      questionCard.style.display = "none";
+      localStorage.setItem('hasAnswered', 'true');  // 記錄已經回答過
+    }
+
+    function showConfetti() {
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.animationDelay = `${Math.random() * 2}s`;
+        confetti.style.width = `${Math.random() * 10 + 5}px`;
+        confetti.style.height = `${Math.random() * 20 + 10}px`;
+        confetti.style.background = `hsl(${Math.random() * 360}, 100%, 75%)`;
+        confetti.style.setProperty("--random-x", Math.random());
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+  </script>
+</body>
+</html>
